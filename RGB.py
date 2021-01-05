@@ -10,25 +10,26 @@ import os
 
 
 def normalization(array):
-    array = np.around(array, 9)
+    array = np.around(array, 4)
     min_ele = array.min(initial=None)
     array -= min_ele
     max_ele = array.max(initial=None)
     array = 255 * array / max_ele
-    return np.around(array, 9)
+    return np.around(array, 4)
 
-######
-Max_conversion_rate = 5  # Set number -> 0-100 [%].
-Normalization = 1  # 0/1
-######
+
+Max_conversion_rate = 100  # Set number -> 0-100 [%] of the original picture size.
+Normalization = 1  # Normalization of results /  Set 0/1
+Picture_choice = 0  # Selection photo / Set 0/1
+
 
 Picture = "Base_RGB.jpg"
 Picture_output = "RGB_output.jpg"
 Picture_compressed = "RGB_compressed_output.jpg"
 space = ' '
-mse_score, ssim_score, psnr_score, svd_score, size, size_compress = [], [], [], [], [], []
-dataset = load_sample_images()
-Base_img = dataset.images[1]
+mse_score, ssim_score, psnr_score, vr_score, size, size_compress = [], [], [], [], [], []
+database = load_sample_images()
+Base_img = database.images[Picture_choice]
 
 Show_img = Image.fromarray(Base_img)
 Show_img.save(Picture)
@@ -40,7 +41,7 @@ f_original.seek(0, os.SEEK_END)
 Base_weight = f_original.tell()
 f_original.close()
 
-Range = int(Max_conversion_rate * (Height-1) / 100) if int(Max_conversion_rate * (Height-1) / 100) < Width else Width -1
+Range = int(Max_conversion_rate * Height / 100) if int(Max_conversion_rate * Height / 100) < Width else Width - 1 if Height == Width else Width
 
 Range = 2 if Range == 0 else Range
 
@@ -61,7 +62,7 @@ for n in range(1, Range):
         Image_encoded = np.dstack(RGB_Encoded_array)
         Image_coded = np.dstack(RGB_Compressed_array)
 
-    svd_score.append(svd.explained_variance_ratio_.sum())
+    vr_score.append(svd.explained_variance_ratio_.sum())
     psnr_score.append(metrics.peak_signal_noise_ratio(Base_img, Image_encoded, data_range=255))
     mse_score.append(measure.simple_metrics.mean_squared_error(Base_img, Image_encoded))
     ssim_score.append(compare_ssim(Base_img, Image_encoded, data_range=255, multichannel=True))
@@ -89,9 +90,9 @@ Conversion_rate = [float(x+1)*100/Height for x in range(Range-1)]
 
 fig = plt.figure()
 plt.subplot(2, 2, 1)
-plt.title('Svd_score')
+plt.title('Vr_score')
 plt.ylabel('Variance ratio')
-plt.plot(Conversion_rate, svd_score, 'r-o')
+plt.plot(Conversion_rate, vr_score, 'r-o')
 
 plt.subplot(2, 2, 2)
 plt.title("Psnr_score")

@@ -17,16 +17,18 @@ def normalization(array):
     array = 255 * array / max_ele
     return np.around(array, 0)
 
-######
-Max_conversion_rate = 100  # Set number -> 0-100 [%].
-######
+
+Max_conversion_rate = 80  # Set number -> 0-100 [%] of the original picture size.
+Normalization = 1  # Normalization of results / Set 0/1
+Picture_choice = 1  # Selection photo / Set 0/1
+
 
 Picture = "Base_RGB.jpg"
 Picture_output = "RGB_output.jpg"
 Picture_compressed = "RGB_compressed_output.jpg"
 space = ' '
-dataset = load_sample_images()
-Base_img = dataset.images[1]
+database = load_sample_images()
+Base_img = database.images[Picture_choice]
 
 Show_img = Image.fromarray(Base_img)
 Show_img.save(Picture)
@@ -38,7 +40,7 @@ f_original.seek(0, os.SEEK_END)
 Base_weight = f_original.tell()
 f_original.close()
 
-Range = int(Max_conversion_rate * (Height-1) / 100) if int(Max_conversion_rate * (Height-1) / 100) < Width else Width -1
+Range = int(Max_conversion_rate * Height / 100) if int(Max_conversion_rate * Height / 100) < Width else Width - 1 if Height == Width else Width
 
 RGB_Encoded_array = []
 RGB_Compressed_array = []
@@ -50,11 +52,17 @@ for RGB_each_array in range(3):
     RGB_Compressed_array.append(RGB_simple_array)
     RGB_Encoded_array.append((svd.inverse_transform(RGB_simple_array)))
 
-Image_encoded = normalization(np.dstack(RGB_Encoded_array))
-Image_coded = normalization(np.dstack(RGB_Compressed_array))
-RGB_Encoded_array = normalization(RGB_Encoded_array)
 
-svd_score = (svd.explained_variance_ratio_.sum())
+if Normalization == 1:
+    Image_encoded = normalization(np.dstack(RGB_Encoded_array))
+    Image_coded = normalization(np.dstack(RGB_Compressed_array))
+    RGB_Encoded_array = normalization(RGB_Encoded_array)
+else:
+    Image_encoded = np.dstack(RGB_Encoded_array)
+    Image_coded = np.dstack(RGB_Compressed_array)
+    RGB_Encoded_array = RGB_Encoded_array
+
+vr_score = svd.explained_variance_ratio_.sum()
 psnr_score = metrics.peak_signal_noise_ratio(Base_img, Image_encoded, data_range=255)
 mse_score = measure.simple_metrics.mean_squared_error(Base_img, Image_encoded)
 ssim_score = compare_ssim(Base_img, Image_encoded, data_range=255, multichannel=True)
@@ -79,7 +87,7 @@ fo.close()
 size_compress = 100 * Code_Weigth / Base_weight
 
 Title = "PSNR:" + str(round(psnr_score, 3)) + "[dB]" + 10*space + "SSIM:" + str(round(ssim_score, 3))+"\n" + \
-        + 14 * space + "MSE:" + str(round(mse_score, 3)) + 10*space + "Variance ratio:" + str(round(svd_score, 3))
+        + 14 * space + "MSE:" + str(round(mse_score, 3)) + 10*space + "Variance ratio:" + str(round(vr_score, 3))
 
 fig = plt.figure(1)
 fig.suptitle(Title)

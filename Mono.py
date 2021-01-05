@@ -7,23 +7,22 @@ import numpy as np
 from matplotlib import pyplot as plt
 import os
 
-Max_conversion_rate = 20  # set number -> 0-100 [%] !!!!!!!!!!!
-Transpone = 0
+Max_conversion_rate = 100  # Set number -> 0-100 [%] of the original picture size.
+Picture_choice = 0  # Selection photo / Set 0/1
+
 
 Picture = "Base_Mono.jpg"
 Picture_output = "Mono_output.jpg"
 Picture_compressed = "Mono_compressed_output.jpg"
-mse_score, ssim_score, psnr_score, svd_score, size, size_compress = [], [], [], [], [], []
+mse_score, ssim_score, psnr_score, vr_score, size, size_compress = [], [], [], [], [], []
 
-dataset = load_sample_images()
-first_img = dataset.images[0]
-####first_img=np.array(Image.open("Mono-test.jpg"))  # jesli ktos chce wpisac obraz recznie
+database = load_sample_images()
+first_img = database.images[Picture_choice]
 Show_img = Image.fromarray(first_img).convert('L')
 Show_img.save(Picture)
 
 Base_img = np.dot(first_img, [0.2989, 0.587, 0.114])
 Base_img = np.float64(Base_img)
-Base_img = np.transpose(Base_img) if Transpone == 1 else Base_img
 Height, Width = Base_img.shape[0], Base_img.shape[1]
 
 f_original = open(Picture)
@@ -31,15 +30,15 @@ f_original.seek(0, os.SEEK_END)
 Base_weight = f_original.tell()
 f_original.close()
 
-Range = int(Max_conversion_rate * (Height-1) / 100) if int(Max_conversion_rate * (Height-1) / 100) < Width else Width - 1
+Range = int(Max_conversion_rate * Height / 100) if int(Max_conversion_rate * Height / 100) < Width else Width - 1 if Height == Width else Width
 Range = 2 if Range == 0 else Range  # dla uzyskania min 1pkt
 
 for n in range(1, Range):
     svd = decomposition.TruncatedSVD(n_components=n)
     Image_coded = svd.fit_transform(Base_img)
-    svd_score.append(svd.explained_variance_ratio_.sum())
     Image_encoded = svd.inverse_transform(Image_coded)
 
+    vr_score.append(svd.explained_variance_ratio_.sum())
     psnr_score.append(metrics.peak_signal_noise_ratio(Base_img, Image_encoded, data_range=255))
     mse_score.append(measure.simple_metrics.mean_squared_error(Base_img, Image_encoded))
     ssim_score.append(measure._structural_similarity.compare_ssim(Base_img, Image_encoded, data_range=255))
@@ -68,12 +67,10 @@ fig = plt.figure()
 plt.subplot(2, 2, 1)
 plt.title('Svd_score')
 plt.ylabel('Variance ratio')
-#plt.xlabel('Conversion_rate[%]')
-plt.plot(Conversion_rate, svd_score, 'r-o')
+plt.plot(Conversion_rate, vr_score, 'r-o')
 
 plt.subplot(2, 2, 2)
 plt.title("Psnr_score")
-#plt.xlabel('Conversion_rate[%]')
 plt.ylabel('PSMR[db]')
 plt.plot(Conversion_rate, psnr_score, 'r-o')
 
@@ -93,7 +90,6 @@ fig_1 = plt.figure()
 plt.subplot(2, 1, 1)
 plt.title("Decompressed_Image")
 plt.ylabel('Ratio[%]')
-#plt.xlabel('Conversion_rate[%]')
 plt.plot(Conversion_rate, size, 'r-o')
 
 plt.subplot(2, 1, 2)
