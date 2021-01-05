@@ -1,8 +1,6 @@
 # SVD
 Project Description:
-The project shows the principle of SVD decomposition to compress .jpg images. The scripts provide a complete analysis of the algorithm's operation using many parameters. Scripts are categorized into black and white and color photos. Additionally, there are additional scripts analyzing the full spectrum of compression levels.
-
-
+The project shows the principle of SVD decomposition to compress .jpg images. The scripts provide a complete analysis of the algorithm's operation using many parameters. Scripts are categorized into black and white and color photos. Additionally, there are additional scripts analyzing the full spectrum of compression levels. For more information, see the basic SVD compression.pdf documentation.
 
 
 ## Authors:
