@@ -5,3 +5,5 @@ The project shows the principle of SVD decomposition to compress .jpg images. Th
 
 ## Authors:
 Krzysztof Jędrejasz, Kacper Kupiszewski, Kamil Maczuga,
+
+![alt text](https://github.com/coffinon/Python_project/blob/main/compression_image.jpg)
